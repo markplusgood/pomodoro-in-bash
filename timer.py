@@ -88,15 +88,19 @@ def countdown(total_seconds):
         finally:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
 
-def wait_for_p(message):
+def wait_for_p(message, sound_filename=None):
     if not is_interactive:
         return
     start_time = time.time()
+    last_sound_time = start_time
     old_settings = termios.tcgetattr(sys.stdin)
     try:
         tty.setraw(sys.stdin.fileno())
         while True:
             current_time = time.time()
+            if sound_filename and (current_time - last_sound_time) >= 120:
+                play_sound(sound_filename)
+                last_sound_time = current_time
             overdue = int(current_time - start_time)
             hours, secs = divmod(overdue, 3600)
             mins, secs = divmod(secs, 60)
@@ -137,7 +141,7 @@ def run_pomodoro(work_time, break_time, sessions):
 
             if work_sessions_done < sessions:
                 # Wait for P to start break
-                wait_for_p(f"Work Session {work_sessions_done} complete, press P for a break. Break Overdue:")
+                wait_for_p(f"Work Session {work_sessions_done} complete, press P for a break. Break Overdue:", 'break-time.mp3')
 
                 # --- Break Session ---
                 print(f"""
@@ -148,12 +152,12 @@ def run_pomodoro(work_time, break_time, sessions):
                 print() # Print a newline after the timer is done
 
                 # Wait for P to start next work
-                wait_for_p(f"Break {work_sessions_done} complete. To start the next work session, press P. Work Overdue:")
+                wait_for_p(f"Break {work_sessions_done} complete. To start the next work session, press P. Work Overdue:", 'back-to-work.mp3')
             else:
                 # All sessions complete, ask to add another
                 if ask_continue():
                     # Wait for P to start break
-                    wait_for_p("Press P for break. Break Overdue:")
+                    wait_for_p("Press P for break. Break Overdue:", 'break-time.mp3')
 
                     # --- Break Session ---
                     print(f"""
@@ -164,7 +168,7 @@ def run_pomodoro(work_time, break_time, sessions):
                     print() # Print a newline after the timer is done
 
                     # Wait for P to start next work
-                    wait_for_p("Break complete. To start the next work session, press P. Work Overdue:")
+                    wait_for_p("Break complete. To start the next work session, press P. Work Overdue:", 'back-to-work.mp3')
                     play_sound('aight-let-s-do-it.mp3')
 
                     # Increment sessions to do one more
