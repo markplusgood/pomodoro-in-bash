@@ -148,7 +148,7 @@ def run_pomodoro(work_time, break_time, sessions):
                 {Colors.BOLD}{Colors.RED}--- Break {work_sessions_done} ---{Colors.ENDC}""")
                 total_seconds = int(parse_time(break_time))
                 countdown(total_seconds)
-                play_sound('media/back-to-work.mp3')
+                play_sound('media/back-to-work')
                 print() # Print a newline after the timer is done
 
                 # Wait for P to start next work

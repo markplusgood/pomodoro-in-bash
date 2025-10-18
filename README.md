@@ -24,10 +24,8 @@ A terminal-based Pomodoro and simple countdown timers, complete with sound effec
    chmod +x timer.py tpom tcount
    ```
 
-4. **Optional**: Add the script directory to your PATH for global access:
-   ```bash
-   export PATH="$PATH:/path/to/timer/scripts"
-   ```
+4. **Add the script directory to your PATH for global access**:
+   Add `path/to/timer/scripts` to your `PATH="$PATH:/...:$PATH` in the .bashrc or .bash_profile.
 
 ## Usage
 
@@ -60,9 +58,14 @@ timer tcount 10m
 ```
 - `10m`: Countdown duration (10 minutes)
 
-Add aliases to your .bashrc to skip typing 'timer' every time
+#### Add aliases to skip typing 'timer' every time
+
+Add this to your .bashrc or .bash_profile
+
+```
 alias 'tpom'='timer tpom'
 alias 'tcount'='timer tcount'
+```
 
 ### Time Formats
 
@@ -100,3 +103,6 @@ Please open an issue or submit a PR on GitHub.
 ## License
 
 This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0) License. See the [LICENSE.md](LICENSE.md) file for details.
+### Source
+
+https://github.com/markplusgood/pomodoro-in-bash
