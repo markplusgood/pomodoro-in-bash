@@ -211,27 +211,45 @@ def run_countdown(time_str):
         sys.exit(0)
 
 def main():
-    parser = argparse.ArgumentParser(description="A stylish terminal timer script.")
-    subparsers = parser.add_subparsers(dest="command")
+    script_name = os.path.basename(sys.argv[0])
+    if script_name == "tpom":
+        if len(sys.argv) != 4:
+            print("Usage: tpom <work> <break> <sessions>", file=sys.stderr)
+            sys.exit(1)
+        try:
+            sessions = int(sys.argv[3])
+        except ValueError:
+            print("Invalid sessions number", file=sys.stderr)
+            sys.exit(1)
+        run_pomodoro(sys.argv[1], sys.argv[2], sessions)
+    elif script_name == "tcount":
+        if len(sys.argv) != 2:
+            print("Usage: tcount <time>", file=sys.stderr)
+            sys.exit(1)
+        run_countdown(sys.argv[1])
+    else:
+        # original logic
+        parser = argparse.ArgumentParser(description="A stylish terminal timer script.")
+        subparsers = parser.add_subparsers(dest="command")
 
-    parser_countdown = subparsers.add_parser("tcount", help="A simple countdown timer.")
-    parser_countdown.add_argument("time", type=str, help="The time to count down (e.g., 5m for 5 minutes, 30s for 30 seconds).")
+        parser_countdown = subparsers.add_parser("tcount", help="A simple countdown timer.")
+        parser_countdown.add_argument("time", type=str, help="The time to count down (e.g., 5m for 5 minutes, 30s for 30 seconds).")
 
-    parser_pomodoro = subparsers.add_parser("tpom", help="A Pomodoro timer.")
-    parser_pomodoro.add_argument("work", type=str, help="Work session length (e.g., 25m, 1500s).")
-    parser_pomodoro.add_argument("break_time", type=str, help="Break session length (e.g., 5m, 300s).")
-    parser_pomodoro.add_argument("sessions", type=int, help="Number of work sessions.")
+        parser_pomodoro = subparsers.add_parser("tpom", help="A Pomodoro timer.")
+        parser_pomodoro.add_argument("work", type=str, help="Work session length (e.g., 25m, 1500s).")
+        parser_pomodoro.add_argument("break_time", type=str, help="Break session length (e.g., 5m, 300s).")
+        parser_pomodoro.add_argument("sessions", type=int, help="Number of work sessions.")
 
-    if len(sys.argv) < 2:
-        parser.print_help(sys.stderr)
-        sys.exit(1)
+        if len(sys.argv) < 2:
+            parser.print_help(sys.stderr)
+            sys.exit(1)
 
-    args = parser.parse_args()
+        args = parser.parse_args()
 
-    if args.command == "tcount":
-        run_countdown(args.time)
-    elif args.command == "tpom":
-        run_pomodoro(args.work, args.break_time, args.sessions)
+        if args.command == "tcount":
+            run_countdown(args.time)
+        elif args.command == "tpom":
+            run_pomodoro(args.work, args.break_time, args.sessions)
 
 if __name__ == "__main__":
     main()
