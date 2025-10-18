@@ -1,0 +1,78 @@
+ 
+import tkinter as tk
+import argparse
+import sys
+
+class TimerApp:
+    def __init__(self, master):
+        self.master = master
+        self.master.title("Timer")
+        self.label = tk.Label(master, text="", font=("Helvetica", 48))
+        self.label.pack(pady=20, padx=20)
+        self.session_label = tk.Label(master, text="", font=("Helvetica", 18))
+        self.session_label.pack()
+
+    def update_display(self, time_str):
+        self.label.config(text=time_str)
+        self.master.update()
+
+    def update_session_display(self, session_str):
+        self.session_label.config(text=session_str)
+        self.master.update()
+
+    def countdown(self, minutes):
+        seconds = int(minutes * 60)
+        while seconds >= 0:
+            mins, secs = divmod(seconds, 60)
+            time_str = f"{mins:02d}:{secs:02d}"
+            self.update_display(time_str)
+            self.master.after(1000)
+            seconds -= 1
+
+    def run_pomodoro(self, work_minutes, break_minutes, sessions):
+        for i in range(sessions):
+            # Work session
+            self.update_session_display(f"Work Session {i+1}/{sessions}")
+            self.countdown(work_minutes)
+
+            # Break session
+            if i < sessions - 1:
+                self.update_session_display(f"Break {i+1}/{sessions}")
+                self.countdown(break_minutes)
+
+        self.update_session_display("Pomodoro Complete!")
+        self.update_display("00:00")
+
+
+def main():
+    parser = argparse.ArgumentParser(description="A simple timer script.")
+    subparsers = parser.add_subparsers(dest="command")
+
+    # Countdown timer
+    parser_countdown = subparsers.add_parser("countdown", help="A simple countdown timer.")
+    parser_countdown.add_argument("minutes", type=float, help="The number of minutes to count down.")
+
+    # Pomodoro timer
+    parser_pomodoro = subparsers.add_parser("pomodoro", help="A Pomodoro timer.")
+    parser_pomodoro.add_argument("-w", "--work", type=float, default=25, help="Work session length in minutes.")
+    parser_pomodoro.add_argument("-b", "--break", type=float, default=5, help="Break session length in minutes.")
+    parser_pomodoro.add_argument("-s", "--sessions", type=int, default=4, help="Number of work sessions.")
+
+    if len(sys.argv) == 1:
+        parser.print_help(sys.stderr)
+        sys.exit(1)
+
+    args = parser.parse_args()
+
+    root = tk.Tk()
+    app = TimerApp(root)
+
+    if args.command == "countdown":
+        app.countdown(args.minutes)
+    elif args.command == "pomodoro":
+        app.run_pomodoro(args.work, args.break, args.sessions)
+
+    root.mainloop()
+
+if __name__ == "__main__":
+    main()
