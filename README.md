@@ -39,8 +39,8 @@ Run a Pomodoro session with work and break intervals:
 # Using the main script
 python3 timer.py tpom 25m 5m 4
 
-# Or directly with the standalone command
-./tpom 25m 5m 4
+# Or directly
+timer tpom 25 5m 4
 ```
 
 - `25m`: Work session length (25 minutes)
@@ -55,11 +55,14 @@ Start a simple countdown:
 # Using the main script
 python3 timer.py tcount 10m
 
-# Or directly with the standalone command
-./tcount 10m
+# Or directly
+timer tcount 10m
 ```
-
 - `10m`: Countdown duration (10 minutes)
+
+Add aliases to your .bashrc to skip typing 'timer' every time
+alias 'tpom'='timer tpom'
+alias 'tcount'='timer tcount'
 
 ### Time Formats
 

@@ -51,9 +51,9 @@ def play_blocking_sound(filename):
 
 def get_work_complete_sound():
     if random.random() < 0.1:  # 10% chance
-        return 'are-you-winning-son.mp3'
+        return 'media/are-you-winning-son.mp3'
     else:
-        return 'break-time.mp3'
+        return 'media/break-time.mp3'
 
 def display_time(seconds, message=""):
     mins, secs = divmod(seconds, 60)
@@ -126,7 +126,7 @@ def ask_continue():
 
 def run_pomodoro(work_time, break_time, sessions):
     try:
-        play_sound('aight-let-s-do-it.mp3')
+        play_sound('media/aight-let-s-do-it.mp3')
         work_sessions_done = 0
         user_exited = False
         while work_sessions_done < sessions:
@@ -141,35 +141,35 @@ def run_pomodoro(work_time, break_time, sessions):
 
             if work_sessions_done < sessions:
                 # Wait for P to start break
-                wait_for_p(f"Work Session {work_sessions_done} complete, press P for a break. Break Overdue:", 'break-time.mp3')
+                wait_for_p(f"Work Session {work_sessions_done} complete, press P for a break. Break Overdue:", 'media/break-time.mp3')
 
                 # --- Break Session ---
                 print(f"""
                 {Colors.BOLD}{Colors.RED}--- Break {work_sessions_done} ---{Colors.ENDC}""")
                 total_seconds = int(parse_time(break_time))
                 countdown(total_seconds)
-                play_sound('back-to-work.mp3')
+                play_sound('media/back-to-work.mp3')
                 print() # Print a newline after the timer is done
 
                 # Wait for P to start next work
-                wait_for_p(f"Break {work_sessions_done} complete. To start the next work session, press P. Work Overdue:", 'back-to-work.mp3')
+                wait_for_p(f"Break {work_sessions_done} complete. To start the next work session, press P. Work Overdue:", 'media/back-to-work.mp3')
             else:
                 # All sessions complete, ask to add another
                 if ask_continue():
                     # Wait for P to start break
-                    wait_for_p("Press P for break. Break Overdue:", 'break-time.mp3')
+                    wait_for_p("Press P for break. Break Overdue:", 'media/break-time.mp3')
 
                     # --- Break Session ---
                     print(f"""
                     {Colors.BOLD}{Colors.RED}--- Break {work_sessions_done} ---{Colors.ENDC}""")
                     total_seconds = int(parse_time(break_time))
                     countdown(total_seconds)
-                    play_sound('back-to-work.mp3')
+                    play_sound('media/back-to-work.mp3')
                     print() # Print a newline after the timer is done
 
                     # Wait for P to start next work
-                    wait_for_p("Break complete. To start the next work session, press P. Work Overdue:", 'back-to-work.mp3')
-                    play_sound('aight-let-s-do-it.mp3')
+                    wait_for_p("Break complete. To start the next work session, press P. Work Overdue:", 'media/back-to-work.mp3')
+                    play_sound('media/aight-let-s-do-it.mp3')
 
                     # Increment sessions to do one more
                     sessions += 1
@@ -181,7 +181,7 @@ def run_pomodoro(work_time, break_time, sessions):
         {Colors.BOLD}{Colors.PURPLE}*** Pomodoro Complete! ***{Colors.ENDC}
         """)
         if user_exited:
-            play_blocking_sound('have-a-good-one.mp3')
+            play_blocking_sound('media/have-a-good-one.mp3')
 
     except KeyboardInterrupt:
         print(f"""
@@ -194,14 +194,14 @@ def run_countdown(time_str):
     try:
         print(f"""
         {Colors.BOLD}{Colors.GREEN}--- Countdown Timer ---{Colors.ENDC}""")
-        play_sound('bell.mp3')
+        play_sound('media/bell.mp3')
         total_seconds = int(parse_time(time_str))
         countdown(total_seconds)
         print(f"""
 
         {Colors.BOLD}{Colors.PURPLE}*** Timer Complete! ***{Colors.ENDC}
         """)
-        play_blocking_sound('gong.mp3')
+        play_blocking_sound('media/gong.mp3')
 
     except KeyboardInterrupt:
         print(f"""
