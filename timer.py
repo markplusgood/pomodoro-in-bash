@@ -233,11 +233,11 @@ def main():
         subparsers = parser.add_subparsers(dest="command")
 
         parser_countdown = subparsers.add_parser("tcount", help="A simple countdown timer.")
-        parser_countdown.add_argument("time", type=str, help="The time to count down (e.g., 5m for 5 minutes, 30s for 30 seconds).")
+        parser_countdown.add_argument("time", type=str, help="The time to count down (e.g., 5 or 5m for 5 minutes, 30s for 30 seconds).")
 
         parser_pomodoro = subparsers.add_parser("tpom", help="A Pomodoro timer.")
-        parser_pomodoro.add_argument("work", type=str, help="Work session length (e.g., 25m, 1500s).")
-        parser_pomodoro.add_argument("break_time", type=str, help="Break session length (e.g., 5m, 300s).")
+        parser_pomodoro.add_argument("work", type=str, help="Work session length (e.g., 25 or 25m, 1500s).")
+        parser_pomodoro.add_argument("break_time", type=str, help="Break session length (e.g., 5 or 5m, 300s).")
         parser_pomodoro.add_argument("sessions", type=int, help="Number of work sessions.")
 
         if len(sys.argv) < 2:
