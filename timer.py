@@ -45,9 +45,9 @@ def play_sound(filename):
     p = subprocess.Popen(['mpg123', '-q', filepath])
     sound_processes.append(p)
 
-def play_blocking_sound(filename):
+def play_detached_sound(filename):
     filepath = os.path.join(os.path.dirname(__file__), filename)
-    os.system('mpg123 -q ' + filepath)
+    subprocess.Popen(['mpg123', '-q', filepath], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
 
 def get_work_complete_sound():
     if random.random() < 0.1:  # 10% chance
@@ -181,7 +181,7 @@ def run_pomodoro(work_time, break_time, sessions):
         {Colors.BOLD}{Colors.PURPLE}*** Pomodoro Complete! ***{Colors.ENDC}
         """)
         if user_exited:
-            play_blocking_sound('media/have-a-good-one.mp3')
+            play_detached_sound('media/have-a-good-one.mp3')
 
     except KeyboardInterrupt:
         print(f"""
@@ -201,7 +201,7 @@ def run_countdown(time_str):
 
         {Colors.BOLD}{Colors.PURPLE}*** Timer Complete! ***{Colors.ENDC}
         """)
-        play_blocking_sound('media/gong.mp3')
+        play_detached_sound('media/gong.mp3')
 
     except KeyboardInterrupt:
         print(f"""
