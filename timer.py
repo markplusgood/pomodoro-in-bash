@@ -158,9 +158,6 @@ def run_pomodoro(work_time, break_time, sessions):
             else:
                 # All sessions complete, ask to add another
                 if ask_continue():
-                    # Wait for P to start break
-                    wait_for_p(f"{Colors.BOLD}{Colors.BLUE}Press P{Colors.ENDC} for break. Break Overdue:", 'media/break-time.mp3')
-
                     # --- Break Session ---
                     print(f"""
                     {Colors.BOLD}{Colors.RED}--- Break {work_sessions_done} ---{Colors.ENDC}""")
