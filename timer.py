@@ -80,7 +80,8 @@ def countdown(total_seconds):
                     key = sys.stdin.read(1)
                     if key == '\x03':
                         raise KeyboardInterrupt
-                    if key.lower() == 'p':
+                    # Check for 'p' in English and other layouts (e.g., 'з' in Russian)
+                    if key.lower() in ['p', 'з']:
                         paused = not paused
                 else:
                     if not paused:
@@ -110,17 +111,24 @@ def wait_for_p(message, sound_filename=None):
                 key = sys.stdin.read(1)
                 if key == '\x03':
                     raise KeyboardInterrupt
-                if key.lower() == 'p':
+                # Check for 'p' in English and other layouts (e.g., 'з' in Russian)
+                if key.lower() in ['p', 'з']:
                     break
     finally:
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
 
 def ask_continue():
-    try:
-        response = input("All work sessions complete. Add another run? y/n: ").strip().lower()
-        return response == 'y'
-    except KeyboardInterrupt:
-        return False
+    while True:
+        try:
+            response = input("All work sessions complete. Add another run? y/n: ").strip().lower()
+            if response == 'y':
+                return True
+            elif response == 'n':
+                return False
+            else:
+                print("Invalid input. Please enter 'y' or 'n'.")
+        except KeyboardInterrupt:
+            return False
 
 # --- Core Functions ---
 
@@ -156,9 +164,6 @@ def run_pomodoro(work_time, break_time, sessions):
             else:
                 # All sessions complete, ask to add another
                 if ask_continue():
-                    # Wait for P to start break
-                    wait_for_p(f"{Colors.BOLD}{Colors.BLUE}Press P{Colors.ENDC} for break. Break Overdue:", 'media/break-time.mp3')
-
                     # --- Break Session ---
                     print(f"""
                     {Colors.BOLD}{Colors.RED}--- Break {work_sessions_done} ---{Colors.ENDC}""")
