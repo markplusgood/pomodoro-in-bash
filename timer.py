@@ -80,7 +80,8 @@ def countdown(total_seconds):
                     key = sys.stdin.read(1)
                     if key == '\x03':
                         raise KeyboardInterrupt
-                    if key.lower() == 'p':
+                    # Check for 'p' in English and other layouts (e.g., 'з' in Russian)
+                    if key.lower() in ['p', 'з']:
                         paused = not paused
                 else:
                     if not paused:
@@ -110,7 +111,8 @@ def wait_for_p(message, sound_filename=None):
                 key = sys.stdin.read(1)
                 if key == '\x03':
                     raise KeyboardInterrupt
-                if key.lower() == 'p':
+                # Check for 'p' in English and other layouts (e.g., 'з' in Russian)
+                if key.lower() in ['p', 'з']:
                     break
     finally:
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
