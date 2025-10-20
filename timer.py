@@ -118,11 +118,17 @@ def wait_for_p(message, sound_filename=None):
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
 
 def ask_continue():
-    try:
-        response = input("All work sessions complete. Add another run? y/n: ").strip().lower()
-        return response == 'y'
-    except KeyboardInterrupt:
-        return False
+    while True:
+        try:
+            response = input("All work sessions complete. Add another run? y/n: ").strip().lower()
+            if response == 'y':
+                return True
+            elif response == 'n':
+                return False
+            else:
+                print("Invalid input. Please enter 'y' or 'n'.")
+        except KeyboardInterrupt:
+            return False
 
 # --- Core Functions ---
 
