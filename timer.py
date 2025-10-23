@@ -49,6 +49,10 @@ def play_detached_sound(filename):
     filepath = os.path.join(os.path.dirname(__file__), filename)
     subprocess.Popen(['mpg123', '-q', filepath], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
 
+
+def notify(message):
+    subprocess.run(['notify-send', '--expire-time=6000', message])
+
 def get_work_complete_sound():
     if random.random() < 0.1:  # 10% chance
         return 'media/are-you-winning-son.mp3'
@@ -135,6 +139,7 @@ def ask_continue():
 def run_pomodoro(work_time, break_time, sessions):
     try:
         play_sound('media/aight-let-s-do-it.mp3')
+        notify("New pomodoro session started. Let's get to work!")
         work_sessions_done = 0
         user_exited = False
         while work_sessions_done < sessions:
@@ -145,6 +150,7 @@ def run_pomodoro(work_time, break_time, sessions):
             total_seconds = int(parse_time(work_time))
             countdown(total_seconds)
             play_sound(get_work_complete_sound())
+            notify(f"Work session {work_sessions_done} complete. Time for a break!")
             print() # Print a newline after the timer is done
 
             if work_sessions_done < sessions:
@@ -157,6 +163,7 @@ def run_pomodoro(work_time, break_time, sessions):
                 total_seconds = int(parse_time(break_time))
                 countdown(total_seconds)
                 play_sound('media/back-to-work.mp3')
+                notify(f"Break {work_sessions_done} complete. Time for work!")
                 print() # Print a newline after the timer is done
 
                 # Wait for P to start next work
@@ -170,11 +177,13 @@ def run_pomodoro(work_time, break_time, sessions):
                     total_seconds = int(parse_time(break_time))
                     countdown(total_seconds)
                     play_sound('media/back-to-work.mp3')
+                    notify("Break complete. Time for work!")
                     print() # Print a newline after the timer is done
 
                     # Wait for P to start next work
                     wait_for_p(f"Break complete. To start the next work session, {Colors.BOLD}{Colors.BLUE}press P{Colors.ENDC}. Work Overdue:", 'media/back-to-work.mp3')
                     play_sound('media/aight-let-s-do-it.mp3')
+                    notify("Let's get to work!")
 
                     # Increment sessions to do one more
                     sessions += 1
@@ -186,7 +195,12 @@ def run_pomodoro(work_time, break_time, sessions):
         {Colors.BOLD}{Colors.PURPLE}*** Pomodoro Complete! ***{Colors.ENDC}
         """)
         if user_exited:
+<<<<<<< HEAD
             play_detached_sound('media/have-a-good-one.mp3')
+=======
+            play_blocking_sound('media/have-a-good-one.mp3')
+            notify("All pomodoro sessions complete. Have a good one!")
+>>>>>>> testing
 
     except KeyboardInterrupt:
         print(f"""
@@ -196,17 +210,38 @@ def run_pomodoro(work_time, break_time, sessions):
         sys.exit(0)
 
 def run_countdown(time_str):
+
     try:
-        print(f"""
-        {Colors.BOLD}{Colors.GREEN}--- Countdown Timer ---{Colors.ENDC}""")
-        play_sound('media/bell.mp3')
-        total_seconds = int(parse_time(time_str))
-        countdown(total_seconds)
+
         print(f"""
 
+        {Colors.BOLD}{Colors.GREEN}--- Countdown Timer ---{Colors.ENDC}"""
+
+        )
+
+        play_sound('media/bell.mp3')
+
+        notify("Countdown timer started")
+
+        total_seconds = int(parse_time(time_str))
+
+        countdown(total_seconds)
+
+        print(f"""
+
+
+
         {Colors.BOLD}{Colors.PURPLE}*** Timer Complete! ***{Colors.ENDC}
+
         """)
+<<<<<<< HEAD
         play_detached_sound('media/gong.mp3')
+=======
+
+        play_blocking_sound('media/gong.mp3')
+>>>>>>> testing
+
+        notify("Timer Complete!")
 
     except KeyboardInterrupt:
         print(f"""
