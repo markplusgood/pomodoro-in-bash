@@ -195,12 +195,7 @@ def run_pomodoro(work_time, break_time, sessions):
         {Colors.BOLD}{Colors.PURPLE}*** Pomodoro Complete! ***{Colors.ENDC}
         """)
         if user_exited:
-<<<<<<< HEAD
             play_detached_sound('media/have-a-good-one.mp3')
-=======
-            play_blocking_sound('media/have-a-good-one.mp3')
-            notify("All pomodoro sessions complete. Have a good one!")
->>>>>>> testing
 
     except KeyboardInterrupt:
         print(f"""
@@ -234,12 +229,7 @@ def run_countdown(time_str):
         {Colors.BOLD}{Colors.PURPLE}*** Timer Complete! ***{Colors.ENDC}
 
         """)
-<<<<<<< HEAD
-        play_detached_sound('media/gong.mp3')
-=======
-
-        play_blocking_sound('media/gong.mp3')
->>>>>>> testing
+        play_detached_sound('media/have-a-good-one.mp3')
 
         notify("Timer Complete!")
 
