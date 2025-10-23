@@ -229,7 +229,7 @@ def run_countdown(time_str):
         {Colors.BOLD}{Colors.PURPLE}*** Timer Complete! ***{Colors.ENDC}
 
         """)
-        play_detached_sound('media/have-a-good-one.mp3')
+        play_detached_sound('media/gong.mp3')
 
         notify("Timer Complete!")
 
