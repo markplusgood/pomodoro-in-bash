@@ -356,8 +356,8 @@ def main():
             parser_pomodoro.print_help(sys.stderr)
             print()
             print(f"{Colors.YELLOW}Usage example:{Colors.ENDC}")
-            print(f"  {Colors.BOLD}python timer.py tpom 25 5 4{Colors.ENDC}    # Regular pomodoro")
-            print(f"  {Colors.BOLD}python timer.py tpom 25 5 4 a{Colors.ENDC}  # Autostart enabled")
+            print(f"  {Colors.BOLD}python pomotimer.py tpom 25 5 4{Colors.ENDC}    # Regular pomodoro")
+            print(f"  {Colors.BOLD}python pomotimer.py tpom 25 5 4 a{Colors.ENDC}  # Autostart enabled")
             print()
             sys.exit(1)
         

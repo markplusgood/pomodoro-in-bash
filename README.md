@@ -1,108 +1,175 @@
 # Terminal Timer
 
-A terminal-based Pomodoro and simple countdown timers, complete with sound effects and interactive controls.
+A minimalistic Pomodoro and countdown timer in terminal, with audio and GUI notifications and interactive controls.
 
 ## Features
 
-- **Pomodoro Timer**: Work/break sessions with custom durations
-- **Countdown Timer**: Simple countdown with time input (minutes/seconds)
+### Core Functionality
+- **Pomodoro Timer**: call 'tpom 45 15 4' to start 4 45-minute work sessions with 15-minute breaks; add 'a' to autostart timers
+- **Countdown Timer**: start with tcount 1m or tcount 1 for 1 minute, 1s for 1 second
 - **Interactive Controls**: Pause/resume with 'p' key, cancel with Ctrl+C
-- **Sound Effects**: Audio notifications for session starts, completions, transitions, and reminders
-- **Colorful Output**: ANSI color codes for enhanced terminal experience
-- **Cross-Platform**: Works on Linux/macOS with mpg123 for audio, yes that includes Omarchy
+- **Notifications**: Audio and GUI notifications and reminders
+- **Rich UI**: Real-time progress bars and ANSI color-coded terminal output
 
 ## Installation
 
-1. **Clone or download** the repository to your local machine.
+### Prerequisites
+1. **Python 3.x** (pre-installed on most Linux distributions)
+2. **mpg123** for audio playback
+3. **notify-send** for desktop notifications (optional, for Linux)
+4. **Terminal**
 
-2. **Install dependencies**:
-   - Python 3.x
-   - `mpg123` for audio playback: `sudo apt-get install mpg123` (Ubuntu/Debian) or `brew install mpg123` (macOS) or `pacman -Syu mpg123` (Omarchy)
+### Installation
 
-3. **Make scripts executable**:
+1. **Install required packages**:
    ```bash
-   chmod +x pom.py tpom tcount
+   sudo pacman -S mpg123 libnotify
    ```
 
-4. **Add the script directory to your PATH for global access**:
-   Add `path/to/timer/scripts` to your `PATH="$PATH:/...:$PATH` in the .bashrc or .bash_profile.
+2. **Download and set up the script**:
+   ```bash
+   # Create a directory for the timer
+   mkdir -p ~/bin/pomotimer
+   cd ~/bin/pomotimer
+   
+   # Copy pomotimer.py and make executable
+   chmod +x pomotimer.py
+   ```
+
+3. **Add to PATH**:
+   Add to your `~/.bashrc`
+   ```bash
+   export PATH="$PATH:$HOME/bin/pom"
+   ```
+
+4. **Set up aliases**:
+   Add to your `~/.bashrc`:
+   ```bash
+   alias 'tpom'='pomotimer tpom'
+   alias 'tcount'='pomotimer tcount'
+   ```
+
+5. **Source it**:
+   ```bash
+   source ~/.bashrc
+   ```
+
+### Alternative System-Wide Installation
+```bash
+# Install to /usr/local/bin for system-wide access
+sudo cp pomotimer.py /usr/local/bin/pom
+sudo chmod +x /usr/local/bin/pom
+
+# Create aliases
+echo "alias 'tpom'='pomotimer tpom'" | sudo tee -a /etc/bash.bashrc
+echo "alias 'tcount'='pomotimer tcount'" | sudo tee -a /etc/bash.bashrc
+```
 
 ## Usage
 
 ### Pomodoro Timer
 
-Run a Pomodoro session with work and break intervals:
-
+**Basic usage:**
 ```bash
 # Using the main script
-python3 pom.py tpom 25m 5m 4
+python3 pomotimer.py tpom 25m 5m 4
 
-# Or directly
-timer tpom 25 5m 4
+# Or with aliases (after setup)
+tpom 25m 5m 4
+
+# Or direct timer command
+pomotimer tpom 25m 5m 4
 ```
 
+**Parameters:**
 - `25m`: Work session length (25 minutes)
-- `5m`: Break length (5 minutes)
+- `5m`: Break length (5 minutes)  
 - `4`: Number of work sessions
+- `a`: Optional to start pomodoro timers automatically
+
+**Autostart Example:**
+```bash
+# With autostart - no 'p' input is needed to continue
+tpom 25m 5m 4 a
+```
 
 ### Countdown Timer
 
-Start a simple countdown:
-
+**Basic usage:**
 ```bash
 # Using the main script
-python3 pom.py tcount 10m
+python3 pomotimer.py tcount 10m
 
-# Or directly
-timer tcount 10m
+# Or with aliases
+tcount 10m
+
+# Or direct timer command
+pomotimer tcount 10m
 ```
-- `10m`: Countdown duration (10 minutes)
 
-#### Add aliases to skip typing 'timer' every time
+**Examples:**
+```bash
+# 30 minute countdown
+tcount 30m
 
-Add this to your .bashrc or .bash_profile
+# 2 hour countdown  
+tcount 120m
 
-```
-alias 'tpom'='timer tpom'
-alias 'tcount'='timer tcount'
+# 45 second countdown
+tcount 45s
+
+# 90 second countdown (90 seconds = 1.5 minutes)
+tcount 1.5m
 ```
 
 ### Time Formats
 
-- Minutes: `25m` or `25` (assumes minutes)
-- Seconds: `1500s`
+- **Minutes**: `25m` or `25` (defaults to minutes)
+- **Seconds**: `1500s` or `90s`
+- **Decimal minutes**: `1.5m` (90 seconds)
+- **Hours**: `2h` (120 minutes)
 
-### Interactive Controls
+## Configuration Tips
 
-- **Pause/Resume**: Press `p` during countdown
-- **Cancel**: Press `Ctrl+C` to exit
-- **Continue**: Press `p` to proceed between sessions
+### Power User Setup
+```bash
+# Add to ~/.bashrc for power user experience
+alias tpom='pomotimer tpom'
+alias tcount='pomotimer tcount'
+alias work50='tpom 50m 10m 4'    # Custom work session
+alias shortbreak='tcount 15m'    # Quick countdown
+alias focus='tpom 25m 5m 8 a'    # Long focus session with autostart
+```
 
-## Sound Files
+## Troubleshooting
 
-The script uses the following audio files (included in the repository):
-- `aight-let-s-do-it.mp3`: Session start
-- `break-time.mp3`: Work complete
-- `back-to-work.mp3`: Break complete
-- `bell.mp3`: Countdown start
-- `gong.mp3`: Countdown complete
-- `have-a-good-one.mp3`: Session end
-- `are-you-winning-son.mp3`: Random work complete (10% chance)
+### Audio Issues
+- **No sound**: Ensure `mpg123` is installed: `which mpg123`
+- **Permission denied**: Check file permissions on audio files
+- **Audio cuts off**: Normal behavior - sounds play asynchronously
+
+### Display Issues
+- **No colors**: Ensure your terminal supports ANSI colors
+- **Progress bar not working**: Terminal may not support carriage return (\r)
+
+### Permission Issues
+- **Script won't execute**: `chmod +x pomotimer.py`
+- **PATH not working**: Restart terminal or run `source ~/.bashrc`
+
+### Notification Issues
+- **No desktop notifications**: Install `libnotify`
 
 ## Contributing
 
-We welcome contributions! Feel free to:
-
+I appreciate any input! Feel free to:
 - Report bugs or suggest features
 - Submit pull requests for improvements
 - Share your experience using the timer
-- Help improve documentation
-
-Please open an issue or submit a PR on GitHub.
 
 ## License
 
 This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0) License. See the [LICENSE.md](LICENSE.md) file for details.
+
 ### Source
 
 https://github.com/markplusgood/pomodoro-in-bash
