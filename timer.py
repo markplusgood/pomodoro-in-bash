@@ -8,7 +8,6 @@ import subprocess
 import tty
 import termios
 import os
-import os.path
 import random
 
 sound_processes = []
@@ -133,8 +132,8 @@ def wait_for_p(message, sound_filename=None):
                 play_sound(sound_filename)
                 last_sound_time = current_time
             overdue = int(current_time - start_time)
-            hours, secs = divmod(overdue, 3600)
-            mins, secs = divmod(secs, 60)
+            hours, rem = divmod(overdue, 3600)
+            mins, secs = divmod(rem, 60)
             overdue_str = f"{hours:02d}:{mins:02d}:{secs:02d}"
             print(f"{message} {overdue_str}", end='\r', flush=True)
             if select.select([sys.stdin], [], [], 1)[0]:
@@ -152,28 +151,14 @@ def ask_continue():
     # Check if we can use terminal control
     try:
         old_settings = termios.tcgetattr(sys.stdin)
-        use_terminal_control = True
     except (termios.error, OSError):
-        # If no terminal control available, default to False (exit)
         return False
     
-    # Use raw mode for complete control over input handling
     try:
-        # Set raw mode
         tty.setraw(sys.stdin.fileno())
-        
-        # Clear any remaining characters first
-        while sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
-            try:
-                sys.stdin.read(1)
-            except:
-                break
-        
-        # Prompt for input
         print("All work sessions complete. Add another run? y/n: ", end='', flush=True)
         
         while True:
-            # Wait for input with timeout
             if select.select([sys.stdin], [], [], 1)[0]:
                 key = sys.stdin.read(1).lower()
                 
@@ -183,19 +168,11 @@ def ask_continue():
                 elif key == 'n':
                     print('n')
                     return False
-                elif key == '\x03':  # Ctrl+C
+                elif key == '\x03':
                     print('^C')
                     raise KeyboardInterrupt
-                # Ignore other keys
-            else:
-                # No input, continue waiting
-                pass
-                
     finally:
-        # Always restore terminal settings
-        if use_terminal_control:
-            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
-        # Print newline to clean up the display
+        termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
         print()
 
 # --- Core Functions ---
