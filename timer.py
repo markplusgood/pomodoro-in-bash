@@ -66,7 +66,7 @@ def display_time(initial_total, remaining_seconds, message=""):
         progress = int(((initial_total - remaining_seconds) / initial_total) * 100)
         width = 20
         filled = int((progress / 100.0) * width)
-        bar = '|' * filled + ' ' * (width - filled)
+        bar = '▌' * filled + ' ' * (width - filled)
         print(f"\x1b[2K    {Colors.BOLD}{Colors.YELLOW}{time_str}{Colors.ENDC} [{bar}] {progress}% {message}", end='\r', flush=True)
     else:
         print(f"\x1b[2K    {Colors.BOLD}{Colors.YELLOW}{time_str}{Colors.ENDC} {message}", end='\r', flush=True)
@@ -162,10 +162,20 @@ def run_pomodoro(work_time, break_time, sessions, autostart=False):
             notify(f"Work session {work_sessions_done} complete. Time for a break!")
             print() # Print a newline after the timer is done
 
+            run_break = False
             if work_sessions_done < sessions:
-                # Wait for P to start break
+                run_break = True
+            else:
+                if ask_continue():
+                    sessions += 1
+                    run_break = True
+                else:
+                    user_exited = True
+                    break
+
+            if run_break:
                 if not autostart:
-                    wait_for_p(f"Work Session {work_sessions_done} complete, {Colors.BOLD}{Colors.BLUE}press P{Colors.ENDC} for a break. Break Overdue:", 'media/break-time.mp3')
+                    wait_for_p(f"""Work Session {work_sessions_done} complete, {Colors.BOLD}{Colors.BLUE}press P{Colors.ENDC} for a break. Break Overdue:""", 'media/break-time.mp3')
 
                 # --- Break Session ---
                 print(f"""
@@ -174,35 +184,11 @@ def run_pomodoro(work_time, break_time, sessions, autostart=False):
                 total_seconds = int(parse_time(break_time))
                 countdown(total_seconds)
                 play_sound('media/back-to-work.mp3')
-                notify(f"Break {work_sessions_done} complete. Time for work!")
+                notify(f"""Break {work_sessions_done} complete. Time for work!""")
                 print() # Print a newline after the timer is done
 
-                # Wait for P to start next work
                 if not autostart:
-                    wait_for_p(f"Break {work_sessions_done} complete. To start the next work session, {Colors.BOLD}{Colors.BLUE}press P{Colors.ENDC}. Work Overdue:", 'media/back-to-work.mp3')
-            else:
-                # --- Final Break Session ---
-                print(f"""
-                {Colors.BOLD}{Colors.RED}--- Break {work_sessions_done} ---
-                {Colors.ENDC}""")
-                total_seconds = int(parse_time(break_time))
-                countdown(total_seconds)
-                play_sound('media/back-to-work.mp3')
-                notify("Break complete. Time for work!")
-                print() # Print a newline after the timer is done
-
-                # All sessions complete, ask to add another run
-                if ask_continue():
-                    # Wait for P to start next work
-                    if not autostart:
-                        wait_for_p(f"Break complete. To start the next work session, {Colors.BOLD}{Colors.BLUE}press P{Colors.ENDC}. Work Overdue:", 'media/back-to-work.mp3')
-                    play_sound('media/aight-let-s-do-it.mp3')
-                    notify("Let's get to work!")
-                    # Increment sessions to do one more
-                    sessions += 1
-                else:
-                    user_exited = True
-                    break
+                    wait_for_p(f"""Break {work_sessions_done} complete. To start the next work session, {Colors.BOLD}{Colors.BLUE}press P{Colors.ENDC}. Work Overdue:""", 'media/back-to-work.mp3')
 
         print(f"""
         {Colors.BOLD}{Colors.PURPLE}*** Pomodoro Complete! ***
@@ -276,10 +262,7 @@ def main():
     if args.command == "tcount":
         run_countdown(args.time)
     elif args.command == "tpom":
-        print(f"DEBUG: sys.argv = {sys.argv}")
-        print(f"DEBUG: args.autostart = {args.autostart}")
         autostart = args.autostart == 'a'
-        print(f"DEBUG: autostart = {autostart}")
         run_pomodoro(args.work, args.break_time, args.sessions, autostart)
 
 if __name__ == "__main__":
