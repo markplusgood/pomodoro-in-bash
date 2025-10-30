@@ -11,8 +11,6 @@ import os
 import os.path
 import random
 
-is_interactive = sys.stdin.isatty()
-
 sound_processes = []
 
 def cleanup_sounds():
@@ -41,12 +39,14 @@ def parse_time(time_str):
         return float(time_str) * 60
 
 def play_sound(filename):
-    filepath = os.path.join(os.path.dirname(__file__), filename)
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    filepath = os.path.join(script_dir, filename)
     p = subprocess.Popen(['mpg123', '-q', filepath])
     sound_processes.append(p)
 
 def play_detached_sound(filename):
-    filepath = os.path.join(os.path.dirname(__file__), filename)
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    filepath = os.path.join(script_dir, filename)
     subprocess.Popen(['mpg123', '-q', filepath], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
 
 
@@ -54,7 +54,7 @@ def notify(message):
     subprocess.run(['notify-send', '--expire-time=3000', message])
 
 def get_work_complete_sound():
-    if random.random() < 0.1:  # 10% chance
+    if random.random() < 0.2:  # 20% chance
         return 'media/are-you-winning-son.mp3'
     else:
         return 'media/break-time.mp3'
@@ -73,14 +73,16 @@ def display_time(initial_total, remaining_seconds, message=""):
 
 def countdown(total_seconds):
     initial_total = total_seconds
-    if not is_interactive:
-        while total_seconds >= 0:
-            display_time(initial_total, total_seconds, "")
-            time.sleep(1)
-            total_seconds -= 1
-    else:
-        paused = False
+    paused = False
+    
+    # Check if we can use terminal control
+    try:
         old_settings = termios.tcgetattr(sys.stdin)
+        use_terminal_control = True
+    except (termios.error, OSError):
+        use_terminal_control = False
+    
+    if use_terminal_control:
         try:
             tty.setraw(sys.stdin.fileno())
             while total_seconds >= 0:
@@ -99,14 +101,30 @@ def countdown(total_seconds):
                     if not paused:
                         total_seconds -= 1
         finally:
-            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+            if use_terminal_control:
+                termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+    else:
+        # Fallback for non-terminal environments
+        while total_seconds >= 0:
+            display_time(initial_total, total_seconds, "")
+            time.sleep(1)
+            total_seconds -= 1
 
 def wait_for_p(message, sound_filename=None):
-    if not is_interactive:
-        return
     start_time = time.time()
     last_sound_time = start_time
-    old_settings = termios.tcgetattr(sys.stdin)
+    
+    # Check if we can use terminal control
+    try:
+        old_settings = termios.tcgetattr(sys.stdin)
+        use_terminal_control = True
+    except (termios.error, OSError):
+        use_terminal_control = False
+    
+    if not use_terminal_control:
+        # If no terminal control available, just return immediately
+        return
+        
     try:
         tty.setraw(sys.stdin.fileno())
         while True:
@@ -127,15 +145,19 @@ def wait_for_p(message, sound_filename=None):
                 if key.lower() in ['p', 'з']:
                     break
     finally:
-        termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+        if use_terminal_control:
+            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
 
 def ask_continue():
-    if not is_interactive:
-        # Non-interactive mode - just return False to exit
+    # Check if we can use terminal control
+    try:
+        old_settings = termios.tcgetattr(sys.stdin)
+        use_terminal_control = True
+    except (termios.error, OSError):
+        # If no terminal control available, default to False (exit)
         return False
-        
+    
     # Use raw mode for complete control over input handling
-    old_settings = termios.tcgetattr(sys.stdin)
     try:
         # Set raw mode
         tty.setraw(sys.stdin.fileno())
@@ -171,7 +193,8 @@ def ask_continue():
                 
     finally:
         # Always restore terminal settings
-        termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+        if use_terminal_control:
+            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
         # Print newline to clean up the display
         print()
 

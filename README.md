@@ -21,7 +21,7 @@ A terminal-based Pomodoro and simple countdown timers, complete with sound effec
 
 3. **Make scripts executable**:
    ```bash
-   chmod +x timer.py tpom tcount
+   chmod +x pom.py tpom tcount
    ```
 
 4. **Add the script directory to your PATH for global access**:
@@ -35,7 +35,7 @@ Run a Pomodoro session with work and break intervals:
 
 ```bash
 # Using the main script
-python3 timer.py tpom 25m 5m 4
+python3 pom.py tpom 25m 5m 4
 
 # Or directly
 timer tpom 25 5m 4
@@ -51,7 +51,7 @@ Start a simple countdown:
 
 ```bash
 # Using the main script
-python3 timer.py tcount 10m
+python3 pom.py tcount 10m
 
 # Or directly
 timer tcount 10m
