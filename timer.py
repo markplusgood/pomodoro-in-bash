@@ -29,28 +29,78 @@ class Colors:
     ENDC = '\x1b[0m'
 
 def parse_time(time_str):
-    if time_str.endswith('s'):
-        return float(time_str[:-1])
-    elif time_str.endswith('m'):
-        return float(time_str[:-1]) * 60
-    else:
-        # assume minutes if no suffix
-        return float(time_str) * 60
+    try:
+        time_str = time_str.strip()
+        if not time_str:
+            raise ValueError("Time string cannot be empty")
+            
+        if time_str.endswith('s'):
+            value = float(time_str[:-1])
+        elif time_str.endswith('m'):
+            value = float(time_str[:-1]) * 60
+        else:
+            # assume minutes if no suffix
+            value = float(time_str) * 60
+            
+        if value <= 0:
+            raise ValueError("Time value must be positive")
+            
+        return value
+    except (ValueError, IndexError) as e:
+        print(f"{Colors.RED}Error: Invalid time format '{time_str}'. Use format like '5m', '30s', or '25' (minutes).{Colors.ENDC}")
+        sys.exit(1)
 
 def play_sound(filename):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     filepath = os.path.join(script_dir, filename)
-    p = subprocess.Popen(['mpg123', '-q', filepath])
-    sound_processes.append(p)
+    
+    try:
+        if not os.path.isfile(filepath):
+            print(f"{Colors.YELLOW}Warning: Sound file not found: {filepath}{Colors.ENDC}")
+            return
+    except Exception as e:
+        print(f"{Colors.YELLOW}Warning: Cannot access sound file {filepath}: {e}{Colors.ENDC}")
+        return
+    
+    try:
+        p = subprocess.Popen(['mpg123', '-q', filepath],
+                           stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL)
+        sound_processes.append(p)
+    except FileNotFoundError:
+        print(f"{Colors.YELLOW}Warning: mpg123 not found. Install with: sudo apt install mpg123{Colors.ENDC}")
+    except Exception as e:
+        print(f"{Colors.YELLOW}Warning: Failed to play sound {filepath}: {e}{Colors.ENDC}")
 
 def play_detached_sound(filename):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     filepath = os.path.join(script_dir, filename)
-    subprocess.Popen(['mpg123', '-q', filepath], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
-
+    
+    try:
+        if not os.path.isfile(filepath):
+            return  # Silently skip missing files in detached mode
+    except Exception:
+        return
+    
+    try:
+        subprocess.Popen(['mpg123', '-q', filepath],
+                        stdin=subprocess.DEVNULL,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        start_new_session=True)
+    except (FileNotFoundError, Exception):
+        pass  # Silently fail in detached mode
 
 def notify(message):
-    subprocess.run(['notify-send', '--expire-time=3000', message])
+    try:
+        result = subprocess.run(['notify-send', '--expire-time=3000', message],
+                               capture_output=True, text=True)
+        if result.returncode != 0:
+            print(f"{Colors.YELLOW}Note: Desktop notifications may not be available{Colors.ENDC}")
+    except FileNotFoundError:
+        print(f"{Colors.YELLOW}Note: notify-send not found. Desktop notifications disabled{Colors.ENDC}")
+    except Exception as e:
+        print(f"{Colors.YELLOW}Note: Failed to send notification: {e}{Colors.ENDC}")
 
 def get_work_complete_sound():
     if random.random() < 0.2:  # 20% chance
@@ -299,6 +349,19 @@ def main():
     if args.command == "tcount":
         run_countdown(args.time)
     elif args.command == "tpom":
+        # Validate autostart parameter
+        if args.autostart is not None and args.autostart != '' and args.autostart != 'a':
+            print(f"{Colors.RED}Error: Invalid autostart parameter '{args.autostart}'.{Colors.ENDC}")
+            print()
+            parser_pomodoro.print_help(sys.stderr)
+            print()
+            print(f"{Colors.YELLOW}Usage example:{Colors.ENDC}")
+            print(f"  {Colors.BOLD}python timer.py tpom 25 5 4{Colors.ENDC}    # Regular pomodoro")
+            print(f"  {Colors.BOLD}python timer.py tpom 25 5 4 a{Colors.ENDC}  # Autostart enabled")
+            print()
+            sys.exit(1)
+        
+        # Treat empty string as None (no autostart)
         autostart = args.autostart == 'a'
         run_pomodoro(args.work, args.break_time, args.sessions, autostart)
 
