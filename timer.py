@@ -130,17 +130,50 @@ def wait_for_p(message, sound_filename=None):
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
 
 def ask_continue():
-    while True:
-        try:
-            response = input("All work sessions complete. Add another run? y/n: ").strip().lower()
-            if response == 'y':
-                return True
-            elif response == 'n':
-                return False
+    if not is_interactive:
+        # Non-interactive mode - just return False to exit
+        return False
+        
+    # Use raw mode for complete control over input handling
+    old_settings = termios.tcgetattr(sys.stdin)
+    try:
+        # Set raw mode
+        tty.setraw(sys.stdin.fileno())
+        
+        # Clear any remaining characters first
+        while sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
+            try:
+                sys.stdin.read(1)
+            except:
+                break
+        
+        # Prompt for input
+        print("All work sessions complete. Add another run? y/n: ", end='', flush=True)
+        
+        while True:
+            # Wait for input with timeout
+            if select.select([sys.stdin], [], [], 1)[0]:
+                key = sys.stdin.read(1).lower()
+                
+                if key == 'y':
+                    print('y')
+                    return True
+                elif key == 'n':
+                    print('n')
+                    return False
+                elif key == '\x03':  # Ctrl+C
+                    print('^C')
+                    raise KeyboardInterrupt
+                # Ignore other keys
             else:
-                print("Invalid input. Please enter 'y' or 'n'.")
-        except KeyboardInterrupt:
-            return False
+                # No input, continue waiting
+                pass
+                
+    finally:
+        # Always restore terminal settings
+        termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+        # Print newline to clean up the display
+        print()
 
 # --- Core Functions ---
 
