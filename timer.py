@@ -196,18 +196,21 @@ def run_pomodoro(work_time, break_time, sessions, autostart=False):
             print() # Print a newline after the timer is done
 
             run_break = False
+            continuing_after_final = False
             if work_sessions_done < sessions:
                 run_break = True
             else:
                 if ask_continue():
                     sessions += 1
                     run_break = True
+                    continuing_after_final = True
                 else:
                     user_exited = True
                     break
 
             if run_break:
-                if not autostart:
+                # For break: don't wait if autostart OR if user just chose to continue
+                if not (autostart or continuing_after_final):
                     wait_for_p(f"""Work Session {work_sessions_done} complete, {Colors.BOLD}{Colors.BLUE}press P{Colors.ENDC} for a break. Break Overdue:""", 'media/break-time.mp3')
 
                 # --- Break Session ---
@@ -220,6 +223,7 @@ def run_pomodoro(work_time, break_time, sessions, autostart=False):
                 notify(f"""Break {work_sessions_done} complete. Time for work!""")
                 print() # Print a newline after the timer is done
 
+                # For work sessions: only skip waiting if autostart (respect the 'a' parameter)
                 if not autostart:
                     wait_for_p(f"""Break {work_sessions_done} complete. To start the next work session, {Colors.BOLD}{Colors.BLUE}press P{Colors.ENDC}. Work Overdue:""", 'media/back-to-work.mp3')
 
