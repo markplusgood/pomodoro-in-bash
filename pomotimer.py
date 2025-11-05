@@ -184,28 +184,42 @@ def countdown(total_seconds, show_autostart_status=True):
             time.sleep(1)
             total_seconds -= 1
 
-def wait_for_p(message, sound_filename=None):
+def wait_for_p(message, sound_filename=None, interval=120):
+    """
+    Wait for user to press 'p' key while displaying a message and optional periodic notifications.
+
+    Args:
+        message: The message to display with elapsed time
+        sound_filename: Optional sound file to play at intervals
+        interval: Seconds between sound/GUI notifications (default 120, but 60 for tcount overdue)
+    """
     start_time = time.time()
     last_sound_time = start_time
-    
+
     # Check if we can use terminal control
     try:
         old_settings = termios.tcgetattr(sys.stdin)
         use_terminal_control = True
     except (termios.error, OSError):
         use_terminal_control = False
-    
+
     if not use_terminal_control:
         # If no terminal control available, just return immediately
         return
-        
+
     try:
         tty.setraw(sys.stdin.fileno())
         while True:
             current_time = time.time()
-            if sound_filename and (current_time - last_sound_time) >= 120:
+            if sound_filename and (current_time - last_sound_time) >= interval:
                 play_sound(sound_filename)
                 last_sound_time = current_time
+                # Send critical notification that lasts until dismissed (no expire-time)
+                try:
+                    subprocess.run(['notify-send', '--urgency=critical', f"Timer overdue by {int((current_time - start_time) // 60)} minutes"],
+                                   capture_output=True, text=True)
+                except (FileNotFoundError, Exception):
+                    pass  # Silently fail if notify-send not available
             overdue = int(current_time - start_time)
             hours, rem = divmod(overdue, 3600)
             mins, secs = divmod(rem, 60)
@@ -343,7 +357,15 @@ def run_countdown(time_str):
         """)
         play_detached_sound('media/gong.mp3')
 
-        notify("Timer Complete!")
+        # Send critical notification for timer completion (persistent, no auto-expire)
+        try:
+            subprocess.run(['notify-send', '--urgency=critical', "Timer Complete!"],
+                           capture_output=True, text=True)
+        except (FileNotFoundError, Exception):
+            pass  # Silently fail if notify-send not available
+
+        # Enter overdue tracking phase with 1-minute notification intervals
+        wait_for_p(f"Timer Complete! {Colors.BOLD}{Colors.BLUE}Press P{Colors.ENDC} to exit. Overdue:", 'media/gong.mp3', 60)
 
     except KeyboardInterrupt:
         print(f"""
