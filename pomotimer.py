@@ -9,6 +9,7 @@ import tty
 import termios
 import os
 import random
+import shutil
 
 sound_processes = []
 autostart_mode = False
@@ -159,11 +160,17 @@ def display_time(initial_total, remaining_seconds, message="", show_autostart_st
     else:
         full_str = f"    {Colors.BOLD}{Colors.YELLOW}{time_str}{Colors.ENDC} {message}{autostart_str}"
 
+    # Handle terminal width to prevent line wrapping issues
+    terminal_width = shutil.get_terminal_size().columns
+    if len(full_str) > terminal_width:
+        full_str = full_str[:terminal_width-3] + "..."
+
     if use_cursor_saving:
         sys.stdout.write('\x1b[u\x1b[J' + full_str)
         sys.stdout.flush()
     else:
-        print(f"\x1b[2K{full_str}", end='\r', flush=True)
+        sys.stdout.write(f'\x1b[2K{full_str}\r')
+        sys.stdout.flush()
 
 def countdown(total_seconds, show_autostart_status=True):
     global autostart_mode
@@ -254,7 +261,22 @@ def wait_for_p(message, sound_filename=None, interval=120):
             hours, rem = divmod(overdue, 3600)
             mins, secs = divmod(rem, 60)
             overdue_str = f"{hours:02d}:{mins:02d}:{secs:02d}"
-            print(f"{message} {overdue_str}", end='\r', flush=True)
+            
+            # Handle terminal width - allow wrapping to second line for overdue timer
+            display_content = f"{message} {overdue_str}"
+            terminal_width = shutil.get_terminal_size().columns
+            
+            # Calculate how many lines the content will span
+            lines_needed = (len(display_content) + terminal_width - 1) // terminal_width
+            
+            # Clear all lines that might contain content
+            for _ in range(lines_needed):
+                sys.stdout.write('\x1b[2K\x1b[1A')  # Clear line and move up
+            sys.stdout.write('\x1b[1B')  # Move back down to original position
+            
+            # Display the content (allow natural wrapping)
+            sys.stdout.write(f'{display_content}\r')
+            sys.stdout.flush()
             if select.select([sys.stdin], [], [], 1)[0]:
                 key = sys.stdin.read(1)
                 if key == '\x03':
