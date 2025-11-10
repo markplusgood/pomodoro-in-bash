@@ -415,7 +415,7 @@ def run_countdown(time_str):
             pass  # Silently fail if notify-send not available
 
         # Enter overdue tracking phase with 1-minute notification intervals
-        wait_for_p(f"Timer Complete! {Colors.BOLD}{Colors.BLUE}Press P{Colors.ENDC} to exit. Overdue:", 'media/gong.mp3', 60)
+        wait_for_p(f"{Colors.BLUE}Press P{Colors.ENDC} to exit. Overdue:", 'media/gong.mp3', 60)
 
     except KeyboardInterrupt:
         print(f"""
