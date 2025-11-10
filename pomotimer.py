@@ -323,7 +323,6 @@ def run_pomodoro(work_time, break_time, sessions):
     global autostart_mode
     try:
         play_sound('media/aight-let-s-do-it.mp3')
-        notify("New pomodoro session started. Let's get to work!")
         work_sessions_done = 0
         user_exited = False
         while work_sessions_done < sessions:
@@ -393,8 +392,6 @@ def run_countdown(time_str):
         {Colors.ENDC}""")
 
         play_sound('media/bell.mp3')
-
-        notify("Countdown timer started")
 
         total_seconds = int(parse_time(time_str))
 
