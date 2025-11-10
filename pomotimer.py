@@ -9,7 +9,6 @@ import tty
 import termios
 import os
 import random
-import shutil
 
 sound_processes = []
 autostart_mode = False
@@ -140,7 +139,7 @@ def get_work_complete_sound():
     else:
         return 'media/break-time.mp3'
 
-def display_time(initial_total, remaining_seconds, message="", show_autostart_status=True):
+def display_time(initial_total, remaining_seconds, message="", show_autostart_status=True, use_cursor_saving=False):
     global autostart_mode
     mins, secs = divmod(remaining_seconds, 60)
     time_str = f"{mins:02d}:{secs:02d}"
@@ -150,6 +149,7 @@ def display_time(initial_total, remaining_seconds, message="", show_autostart_st
         status = f"{Colors.GREEN}ON{Colors.ENDC}" if autostart_mode else f"{Colors.RED}OFF{Colors.ENDC}"
         autostart_str = f" | Auto:{status}"
 
+    full_str = ""
     if initial_total > 0:
         progress = int(((initial_total - remaining_seconds) / initial_total) * 100)
         width = 20
@@ -159,9 +159,11 @@ def display_time(initial_total, remaining_seconds, message="", show_autostart_st
     else:
         full_str = f"    {Colors.BOLD}{Colors.YELLOW}{time_str}{Colors.ENDC} {message}{autostart_str}"
 
-    # Simple approach: clear current line and let terminal handle wrapping naturally
-    sys.stdout.write(f'\x1b[2K{full_str}\r')
-    sys.stdout.flush()
+    if use_cursor_saving:
+        sys.stdout.write('\x1b[u\x1b[J' + full_str)
+        sys.stdout.flush()
+    else:
+        print(f"\x1b[2K{full_str}", end='\r', flush=True)
 
 def countdown(total_seconds, show_autostart_status=True):
     global autostart_mode
@@ -179,11 +181,16 @@ def countdown(total_seconds, show_autostart_status=True):
         try:
             tty.setraw(sys.stdin.fileno())
 
+            # Start on a new line and save cursor position
+            sys.stdout.write('\n')
+            sys.stdout.write('\x1b[s')
+            sys.stdout.flush()
+
             while total_seconds >= 0:
                 if paused:
-                    display_time(initial_total, total_seconds, f"PAUSED - {Colors.BOLD}{Colors.BLUE}press P{Colors.ENDC} to continue", show_autostart_status)
+                    display_time(initial_total, total_seconds, f"PAUSED - {Colors.BOLD}{Colors.BLUE}press P{Colors.ENDC} to continue", show_autostart_status, use_cursor_saving=True)
                 else:
-                    display_time(initial_total, total_seconds, f"{Colors.BOLD}{Colors.BLUE}press P{Colors.ENDC} for pause", show_autostart_status)
+                    display_time(initial_total, total_seconds, f"{Colors.BOLD}{Colors.BLUE}press P{Colors.ENDC} for pause", show_autostart_status, use_cursor_saving=True)
                 
                 if select.select([sys.stdin], [], [], 1)[0]:
                     key = sys.stdin.read(1)
@@ -203,7 +210,7 @@ def countdown(total_seconds, show_autostart_status=True):
     else:
         # Fallback for non-terminal environments
         while total_seconds >= 0:
-            display_time(initial_total, total_seconds, "", show_autostart_status)
+            display_time(initial_total, total_seconds, "", show_autostart_status, use_cursor_saving=False)
             time.sleep(1)
             total_seconds -= 1
 
