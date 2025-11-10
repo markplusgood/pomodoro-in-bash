@@ -9,6 +9,7 @@ import tty
 import termios
 import os
 import random
+import shutil
 
 sound_processes = []
 autostart_mode = False
@@ -69,7 +70,7 @@ def play_sound(filename):
                            stderr=subprocess.DEVNULL)
         sound_processes.append(p)
     except FileNotFoundError:
-        print(f"{Colors.YELLOW}Warning: mpg123 not found. Install with: sudo apt install mpg123{Colors.ENDC}")
+        print(f"{Colors.YELLOW}Warning: mpg123 not found. Install with: sudo pacman -S mpg123{Colors.ENDC}")
     except Exception as e:
         print(f"{Colors.YELLOW}Warning: Failed to play sound {filepath}: {e}{Colors.ENDC}")
 
@@ -94,7 +95,7 @@ def play_detached_sound(filename):
 
 def notify(message):
     try:
-        result = subprocess.run(['notify-send', '--expire-time=3000', message],
+        result = subprocess.run(['notify-send', '--app-name=pomotimer', '--expire-time=3000', message],
                                capture_output=True, text=True)
         if result.returncode != 0:
             print(f"{Colors.YELLOW}Note: Desktop notifications may not be available{Colors.ENDC}")
@@ -102,6 +103,36 @@ def notify(message):
         print(f"{Colors.YELLOW}Note: notify-send not found. Desktop notifications disabled{Colors.ENDC}")
     except Exception as e:
         print(f"{Colors.YELLOW}Note: Failed to send notification: {e}{Colors.ENDC}")
+
+def dismiss_timer_notifications():
+    """
+    Dismiss all notifications from the pomotimer app only.
+    Uses makoctl to list notifications and dismiss only those with app-name=pomotimer.
+    """
+    try:
+        # Get list of current notifications
+        result = subprocess.run(['makoctl', 'list'], capture_output=True, text=True)
+        if result.returncode != 0:
+            return
+        
+        # Parse the output to find pomotimer notification IDs
+        lines = result.stdout.strip().split('\n')
+        pomotimer_ids = []
+        
+        for i, line in enumerate(lines):
+            if line.startswith('Notification ') and i + 1 < len(lines):
+                if 'App name: pomotimer' in lines[i + 1]:
+                    # Extract notification ID from "Notification 123: ..."
+                    notification_id = line.split()[1].rstrip(':')
+                    pomotimer_ids.append(notification_id)
+        
+        # Dismiss each pomotimer notification
+        for notification_id in pomotimer_ids:
+            subprocess.run(['makoctl', 'dismiss', '-n', notification_id], 
+                         capture_output=True, text=True)
+                         
+    except (FileNotFoundError, Exception):
+        pass  # Silently fail if makoctl not available or other errors occur
 
 def get_work_complete_sound():
     if random.random() < 0.2:  # 20% chance
@@ -129,11 +160,17 @@ def display_time(initial_total, remaining_seconds, message="", show_autostart_st
     else:
         full_str = f"    {Colors.BOLD}{Colors.YELLOW}{time_str}{Colors.ENDC} {message}{autostart_str}"
 
+    # Handle terminal width to prevent line wrapping issues
+    terminal_width = shutil.get_terminal_size().columns
+    if len(full_str) > terminal_width:
+        full_str = full_str[:terminal_width-3] + "..."
+
     if use_cursor_saving:
         sys.stdout.write('\x1b[u\x1b[J' + full_str)
         sys.stdout.flush()
     else:
-        print(f"\x1b[2K{full_str}", end='\r', flush=True)
+        sys.stdout.write(f'\x1b[2K{full_str}\r')
+        sys.stdout.flush()
 
 def countdown(total_seconds, show_autostart_status=True):
     global autostart_mode
@@ -216,7 +253,7 @@ def wait_for_p(message, sound_filename=None, interval=120):
                 last_sound_time = current_time
                 # Send critical notification that lasts until dismissed (no expire-time)
                 try:
-                    subprocess.run(['notify-send', '--urgency=critical', f"Timer overdue by {int((current_time - start_time) // 60)} minutes"],
+                    subprocess.run(['notify-send', '--app-name=pomotimer', '--urgency=critical', f"Timer overdue by {int((current_time - start_time) // 60)} minutes"],
                                    capture_output=True, text=True)
                 except (FileNotFoundError, Exception):
                     pass  # Silently fail if notify-send not available
@@ -224,13 +261,29 @@ def wait_for_p(message, sound_filename=None, interval=120):
             hours, rem = divmod(overdue, 3600)
             mins, secs = divmod(rem, 60)
             overdue_str = f"{hours:02d}:{mins:02d}:{secs:02d}"
-            print(f"{message} {overdue_str}", end='\r', flush=True)
+            
+            # Handle terminal width - allow wrapping to second line for overdue timer
+            display_content = f"{message} {overdue_str}"
+            terminal_width = shutil.get_terminal_size().columns
+            
+            # Calculate how many lines the content will span
+            lines_needed = (len(display_content) + terminal_width - 1) // terminal_width
+            
+            # Clear all lines that might contain content
+            for _ in range(lines_needed):
+                sys.stdout.write('\x1b[2K\x1b[1A')  # Clear line and move up
+            sys.stdout.write('\x1b[1B')  # Move back down to original position
+            
+            # Display the content (allow natural wrapping)
+            sys.stdout.write(f'{display_content}\r')
+            sys.stdout.flush()
             if select.select([sys.stdin], [], [], 1)[0]:
                 key = sys.stdin.read(1)
                 if key == '\x03':
                     raise KeyboardInterrupt
                 # Check for 'p' in English and other layouts (e.g., 'з' in Russian)
                 if key.lower() in ['p', 'з']:
+                    dismiss_timer_notifications()
                     break
     finally:
         if use_terminal_control:
@@ -356,7 +409,7 @@ def run_countdown(time_str):
 
         # Send critical notification for timer completion (persistent, no auto-expire)
         try:
-            subprocess.run(['notify-send', '--urgency=critical', "Timer Complete!"],
+            subprocess.run(['notify-send', '--app-name=pomotimer', '--urgency=critical', "Timer Complete!"],
                            capture_output=True, text=True)
         except (FileNotFoundError, Exception):
             pass  # Silently fail if notify-send not available
@@ -373,7 +426,6 @@ def run_countdown(time_str):
 
 def main():
     global autostart_mode
-    # original logic
     parser = argparse.ArgumentParser(description="A stylish terminal timer script.")
     subparsers = parser.add_subparsers(dest="command")
 
