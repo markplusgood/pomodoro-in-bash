@@ -140,6 +140,12 @@ def get_work_complete_sound():
     else:
         return 'media/break-time.mp3'
 
+def get_visual_length(text):
+    """Calculate visual length of string by removing ANSI escape sequences"""
+    import re
+    ansi_escape = re.compile(r'\x1b\[[0-9;]*m')
+    return len(ansi_escape.sub('', text))
+
 def display_time(initial_total, remaining_seconds, message="", show_autostart_status=True, use_cursor_saving=False):
     global autostart_mode
     mins, secs = divmod(remaining_seconds, 60)
@@ -156,14 +162,34 @@ def display_time(initial_total, remaining_seconds, message="", show_autostart_st
         width = 20
         filled = int((progress / 100.0) * width)
         bar = '▌' * filled + ' ' * (width - filled)
-        full_str = f"    {Colors.BOLD}{Colors.YELLOW}{time_str}{Colors.ENDC} [{bar}] {progress}% {message}{autostart_str}"
+        full_str = f"{Colors.BOLD}{Colors.YELLOW}{time_str}{Colors.ENDC} [{bar}] {progress}% {message}{autostart_str}"
     else:
-        full_str = f"    {Colors.BOLD}{Colors.YELLOW}{time_str}{Colors.ENDC} {message}{autostart_str}"
+        full_str = f"{Colors.BOLD}{Colors.YELLOW}{time_str}{Colors.ENDC} {message}{autostart_str}"
 
     # Handle terminal width to prevent line wrapping issues
     terminal_width = shutil.get_terminal_size().columns
-    if len(full_str) > terminal_width:
-        full_str = full_str[:terminal_width-3] + "..."
+    visual_length = get_visual_length(full_str)
+    if visual_length > terminal_width:
+        # Truncate based on visual length, not character count
+        truncated = False
+        temp_str = ""
+        temp_visual = 0
+        i = 0
+        while i < len(full_str) and temp_visual < terminal_width - 3:
+            if full_str[i:i+4] == '\x1b[':
+                # Skip ANSI escape sequence
+                j = i + 2
+                while j < len(full_str) and full_str[j] != 'm':
+                    j += 1
+                if j < len(full_str):
+                    j += 1
+                temp_str += full_str[i:j]
+                i = j
+            else:
+                temp_str += full_str[i]
+                temp_visual += 1
+                i += 1
+        full_str = temp_str + "..."
 
     if use_cursor_saving:
         sys.stdout.write('\x1b[u\x1b[J' + full_str)
