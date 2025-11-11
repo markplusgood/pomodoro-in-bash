@@ -324,7 +324,7 @@ def ask_continue():
     
     try:
         tty.setraw(sys.stdin.fileno())
-        print("All work sessions complete. Add another run? y/n: ", end='', flush=True)
+        print("  All work sessions complete. Add another run? y/n: ", end='', flush=True)
         
         while True:
             if select.select([sys.stdin], [], [], 1)[0]:
